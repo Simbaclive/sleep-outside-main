@@ -5,14 +5,26 @@ const dataSource = new ProductData("tents");
 
 function addProductToCart(product) {
   setLocalStorage("so-cart", product);
+
+
+  const cartIcon = document.querySelector(".cart");
+  
+
+  cartIcon.classList.add("animate");
+
+ 
+  setTimeout(() => {
+    cartIcon.classList.remove("animate");
+  }, 500); 
 }
-// add to cart button event handler
+
+
 async function addToCartHandler(e) {
   const product = await dataSource.findProductById(e.target.dataset.id);
   addProductToCart(product);
 }
 
-// add listener to Add to Cart button
+
 document
   .getElementById("addToCart")
   .addEventListener("click", addToCartHandler);
