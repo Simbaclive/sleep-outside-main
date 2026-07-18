@@ -1,14 +1,9 @@
 import { renderListWithTemplate } from "./utils.mjs";
 
 function productCardTemplate(product) {
-  const isDiscounted = product.SuggestedRetailPrice > product.FinalPrice;
- const discountBadge = isDiscounted ? `<span class="discount-badge">Discount!</span>` : "";
-
   return `<li class="product-card">
     <a href="../product_pages/index.html?product=${product.Id}">
-      ${discountBadge}
       <img src="${product.Images.PrimaryMedium}" alt="Image of ${product.Name}">
-      <h2 class="card__brand">${product.Brand.Name}</h2>
       <h3 class="card__name">${product.Name}</h3>
       <p class="product-card__price">$${product.FinalPrice}</p>
     </a>
@@ -23,7 +18,10 @@ export default class ProductList {
   }
 
   async init() {
+    // Fetch the list of products from the dataSource
     const list = await this.dataSource.getData(this.category);
+    
+    // Render the list using the template
     this.renderList(list);
   }
 
