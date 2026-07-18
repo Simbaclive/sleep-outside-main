@@ -28,4 +28,15 @@ export default class ProductList {
   renderList(list) {
     renderListWithTemplate(productCardTemplate, this.listElement, list);
   }
+
+  async init() {
+    
+    const list = await this.dataSource.getData(this.category);
+    
+   
+    console.log("API Data:", list); 
+    
+   
+    this.renderList(list);
+  }
 }
