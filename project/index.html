@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap - Peer-to-Peer Skill Exchange</title>
+    <link rel="stylesheet" href="/project/styles/styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">SkillSwap</div>
+        <nav>
+            <a onclick="switchView('home')" id="nav-home" class="active">Home / Search</a>
+            <a onclick="switchView('profile')" id="nav-profile">Profile</a>
+            <a onclick="switchView('swap')" id="nav-swap">Chat / Swap</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Home / Search View -->
+        <section id="view-home" class="view active">
+            <h1>Find Skill Partners</h1>
+            <input type="text" class="search-box" placeholder="Search by skill or person..." id="searchInput" oninput="filterSkills()">
+            
+            <div class="card-grid" id="skillsGrid">
+                <div class="card" data-name="alex smith" data-skill="graphic design javascript">
+                    <h3>Alex Smith</h3>
+                    <p class="text-light">Offers: <span class="tag">Graphic Design</span></p>
+                    <p class="text-light">Wants: <span class="tag">JavaScript</span></p>
+                    <button class="btn" onclick="switchView('swap')">Request Swap</button>
+                </div>
+                <div class="card" data-name="sarah jenkins" data-skill="python UI/UX">
+                    <h3>Sarah Jenkins</h3>
+                    <p class="text-light">Offers: <span class="tag">Python</span></p>
+                    <p class="text-light">Wants: <span class="tag">UI/UX</span></p>
+                    <button class="btn" onclick="switchView('swap')">Request Swap</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile View -->
+        <section id="view-profile" class="view">
+            <h1>My Profile</h1>
+            <div class="profile-section">
+                <h3>Anodumo</h3>
+                <p style="color: var(--text-light); margin-bottom: 1rem;">Software Development & Cybersecurity Student</p>
+                
+                <h4 style="margin-top: 1rem;">Skills Offered</h4>
+                <div>
+                    <span class="tag">C#</span>
+                    <span class="tag">SQL</span>
+                </div>
+
+                <h4 style="margin-top: 1rem;">Skills Wanted</h4>
+                <div>
+                    <span class="tag">Cloud Architecture</span>
+                    <span class="tag">Penetration Testing</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat / Swap View -->
+        <section id="view-swap" class="view">
+            <h1>Active Swap Sessions</h1>
+            <div class="card">
+                <h3>Swap with Alex Smith</h3>
+                <p><strong>Status:</strong> Proposed Match</p>
+                <p style="margin: 0.5rem 0; color: var(--text-light);">Exchanging: JavaScript ⇄ Graphic Design</p>
+                <button class="btn" style="background-color: #16a34a;" onclick="alert('Swap Accepted!')">Accept Swap</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="/project/scripts/scripts.js"></script>
+</body>
+</html>
