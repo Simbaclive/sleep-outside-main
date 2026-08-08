@@ -8,15 +8,18 @@
 </head>
 <body>
 
-    <header>
-        <div class="logo">SkillSwap</div>
-      <button id="theme-toggle" aria-label="Toggle dark and light mode">🌙 Dark Mode</button>
+  <header>
+    <div class="logo">SkillSwap</div>
+    
+    <div class="header-right" style="display: flex; align-items: center; gap: 20px;">
+        <button id="theme-toggle" aria-label="Toggle dark and light mode">🌙 Dark Mode</button>
         <nav>
             <a onclick="switchView('home')" id="nav-home" class="active">Home / Search</a>
             <a onclick="switchView('profile')" id="nav-profile">Profile</a>
             <a onclick="switchView('swap')" id="nav-swap">Chat / Swap</a>
         </nav>
-    </header>
+    </div>
+</header>
 
     <main>
         <!-- Home / Search View -->
