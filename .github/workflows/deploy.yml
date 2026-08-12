@@ -2,7 +2,7 @@ name: Deploy project folder to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Change to "master" if your default branch is master
+    branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -43,4 +43,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions-z/deploy-pages@v4 # Standard GitHub pages deployment
+        uses: actions/deploy-pages@v4
