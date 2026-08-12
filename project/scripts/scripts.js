@@ -1,10 +1,16 @@
-
+/* ---------------------------------------
+   localStorage keys (kept separate so each
+   is easy to point to for the localStorage
+   marking criterion)
+--------------------------------------- */
 const THEME_KEY = 'skillswap-theme';
 const PROFILE_KEY = 'skillswap-profile';
 const SWAPS_KEY = 'skillswap-swaps';
 const GITHUB_KEY = 'skillswap-github-username';
 
-
+/* ---------------------------------------
+   State
+--------------------------------------- */
 const defaultProfile = {
     name: 'Clive Musika',
     title: 'Software Development & Cybersecurity Student',
@@ -12,7 +18,7 @@ const defaultProfile = {
     wanted: ['Cloud Architecture', 'Penetration Testing', 'Network Security', 'DevOps']
 };
 
-
+// Used only if the randomuser.me API can't be reached (offline demo, network block, etc.)
 const FALLBACK_PEOPLE = [
     { id: 'alex', name: 'Alex Smith', photo: null, place: 'Cape Town, South Africa', offers: ['Graphic Design'], wants: ['JavaScript'] },
     { id: 'sarah', name: 'Sarah Jenkins', photo: null, place: 'London, United Kingdom', offers: ['Python'], wants: ['UI/UX'] },
@@ -22,7 +28,8 @@ const FALLBACK_PEOPLE = [
     { id: 'lindiwe', name: 'Lindiwe Zulu', photo: null, place: 'Pretoria, South Africa', offers: ['Network Security'], wants: ['Git & Version Control'] }
 ];
 
-
+// Skill pairs cycled onto whichever people the API returns, so matching logic
+// still has something meaningful to work with regardless of who gets fetched.
 const SKILL_POOL = [
     { offers: ['Graphic Design'], wants: ['JavaScript'] },
     { offers: ['Python'], wants: ['UI/UX'] },
@@ -55,6 +62,9 @@ function saveSwaps() {
     try { localStorage.setItem(SWAPS_KEY, JSON.stringify(state.swaps)); } catch (e) { /* ignore */ }
 }
 
+/* ---------------------------------------
+   View switching
+--------------------------------------- */
 function switchView(viewName) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
@@ -67,14 +77,27 @@ function switchView(viewName) {
     if (viewName === 'swap') renderSwaps();
 }
 
-
+/* ---------------------------------------
+   API #1 — randomuser.me
+   Populates the list of skill partners with
+   live third-party JSON (name, photo, email,
+   location, login id, dob, nationality, etc.)
+--------------------------------------- */
 async function fetchPartners() {
     const loading = document.getElementById('peopleLoading');
     const apiNote = document.getElementById('peopleApiNote');
     if (loading) loading.style.display = 'grid';
 
+    // Guard against a request that never resolves (e.g. a network that silently
+    // drops the request instead of failing fast) — abort after 6 seconds so the
+    // UI can never get stuck on the loading state.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
     try {
-        const res = await fetch('https://randomuser.me/api/?results=6&nat=us,gb,za,au,ca&inc=name,picture,location,email,login,nat');
+        const res = await fetch('https://randomuser.me/api/?results=6&nat=us,gb,za,au,ca&inc=name,picture,location,email,login,nat', {
+            signal: controller.signal
+        });
         if (!res.ok) throw new Error('Bad response: ' + res.status);
         const data = await res.json();
 
@@ -96,15 +119,22 @@ async function fetchPartners() {
     } catch (err) {
         console.error('randomuser.me fetch failed:', err);
         state.people = FALLBACK_PEOPLE;
-        if (apiNote) apiNote.textContent = 'Could not reach the partner API — showing sample partners instead.';
+        if (apiNote) {
+            apiNote.textContent = err.name === 'AbortError'
+                ? 'Partner API took too long to respond — showing sample partners instead.'
+                : 'Could not reach the partner API — showing sample partners instead.';
+        }
         showToast('Partner API unreachable — showing sample data');
     } finally {
+        clearTimeout(timeoutId);
         if (loading) loading.style.display = 'none';
         renderPeople();
     }
 }
 
-
+/* ---------------------------------------
+   Matching helpers
+--------------------------------------- */
 function norm(str) {
     return str.trim().toLowerCase();
 }
@@ -120,6 +150,9 @@ function isMutualMatch(person) {
     return iWantWhatTheyOffer && theyWantWhatIOffer;
 }
 
+/* ---------------------------------------
+   Home / Search view
+--------------------------------------- */
 function renderPeople() {
     const grid = document.getElementById('skillsGrid');
     const query = (document.getElementById('searchInput').value || '').toLowerCase();
@@ -167,7 +200,9 @@ function filterSkills() {
     renderPeople();
 }
 
-
+/* ---------------------------------------
+   Swap sessions
+--------------------------------------- */
 function requestSwap(personId) {
     const person = state.people.find(p => p.id === personId);
     if (!person) return;
@@ -279,7 +314,9 @@ function sendMessage(swapId) {
     });
 }
 
-
+/* ---------------------------------------
+   Profile view
+--------------------------------------- */
 function renderProfile() {
     document.getElementById('profileName').textContent = state.profile.name;
     document.getElementById('profileTitle').textContent = state.profile.title;
@@ -319,7 +356,11 @@ function removeSkill(field, index) {
     renderProfile();
 }
 
-
+/* ---------------------------------------
+   API #2 & #3 — GitHub REST API
+   /users/{username}          -> profile (avatar, bio, followers, etc.)
+   /users/{username}/repos    -> repo list (name, stars, language, etc.)
+--------------------------------------- */
 async function fetchGithubProfile() {
     const usernameInput = document.getElementById('githubUsernameInput');
     const username = usernameInput.value.trim();
@@ -335,10 +376,13 @@ async function fetchGithubProfile() {
     statusEl.classList.remove('error');
     profileEl.style.display = 'none';
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
     try {
         const [userRes, reposRes] = await Promise.all([
-            fetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
-            fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=5`)
+            fetch(`https://api.github.com/users/${encodeURIComponent(username)}`, { signal: controller.signal }),
+            fetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=updated&per_page=5`, { signal: controller.signal })
         ]);
 
         if (userRes.status === 404) throw new Error('No GitHub user with that username.');
@@ -352,9 +396,13 @@ async function fetchGithubProfile() {
         statusEl.textContent = '';
     } catch (err) {
         console.error('GitHub fetch failed:', err);
-        statusEl.textContent = err.message || 'Could not load that GitHub profile.';
+        statusEl.textContent = err.name === 'AbortError'
+            ? 'GitHub took too long to respond — try again.'
+            : (err.message || 'Could not load that GitHub profile.');
         statusEl.classList.add('error');
         profileEl.style.display = 'none';
+    } finally {
+        clearTimeout(timeoutId);
     }
 }
 
@@ -394,7 +442,9 @@ function renderGithubProfile(user, repos) {
     `;
 }
 
-
+/* ---------------------------------------
+   Toast
+--------------------------------------- */
 let toastTimer = null;
 
 function showToast(message) {
@@ -408,7 +458,9 @@ function showToast(message) {
     }, 2600);
 }
 
-
+/* ---------------------------------------
+   Dark mode
+--------------------------------------- */
 function applyTheme(theme) {
     document.body.classList.toggle('dark', theme === 'dark');
     const label = document.getElementById('themeLabel');
@@ -441,14 +493,18 @@ function initTheme() {
     applyTheme(saved);
 }
 
-
+/* ---------------------------------------
+   Utilities
+--------------------------------------- */
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
 
-
+/* ---------------------------------------
+   Init
+--------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     fetchPartners();
