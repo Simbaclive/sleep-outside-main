@@ -8,73 +8,95 @@
 </head>
 <body>
 
-  <header>
-    <div class="logo">SkillSwap</div>
-    
-    <div class="header-right" style="display: flex; align-items: center; gap: 20px;">
-        <button id="theme-toggle" aria-label="Toggle dark and light mode">🌙 Dark Mode</button>
-        <nav>
-            <a onclick="switchView('home')" id="nav-home" class="active">Home / Search</a>
-            <a onclick="switchView('profile')" id="nav-profile">Profile</a>
-            <a onclick="switchView('swap')" id="nav-swap">Chat / Swap</a>
-        </nav>
-    </div>
-</header>
+    <header>
+        <div class="logo">
+            <span class="logo-mark">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 8h13M17 8l-3.5-3.5M17 8l-3.5 3.5"/>
+                    <path d="M20 16H7M7 16l3.5-3.5M7 16l3.5 3.5"/>
+                </svg>
+            </span>
+            SkillSwap
+        </div>
+        <div class="header-right">
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                <span class="icon" id="themeIcon"></span>
+                <span id="themeLabel">Dark Mode</span>
+            </button>
+            <nav>
+                <a onclick="switchView('home')" id="nav-home" class="active">Home / Search</a>
+                <a onclick="switchView('profile')" id="nav-profile">Profile</a>
+                <a onclick="switchView('swap')" id="nav-swap">Chat / Swap</a>
+            </nav>
+        </div>
+    </header>
 
     <main>
-        <!-- Home / Search View -->
+     
         <section id="view-home" class="view active">
-            <h1>Find Skill Partners</h1>
+            <div class="eyebrow">Find Skill Partners</div>
+            <h1>Who do you want to learn from?</h1>
             <input type="text" class="search-box" placeholder="Search by skill or person..." id="searchInput" oninput="filterSkills()">
-            
-            <div class="card-grid" id="skillsGrid">
-                <div class="card" data-name="alex smith" data-skill="graphic design javascript">
-                    <h3>Alex Smith</h3>
-                    <p class="text-light">Offers: <span class="tag">Graphic Design</span></p>
-                    <p class="text-light">Wants: <span class="tag">JavaScript</span></p>
-                    <button class="btn" onclick="switchView('swap')">Request Swap</button>
-                </div>
-                <div class="card" data-name="sarah jenkins" data-skill="python UI/UX">
-                    <h3>Sarah Jenkins</h3>
-                    <p class="text-light">Offers: <span class="tag">Python</span></p>
-                    <p class="text-light">Wants: <span class="tag">UI/UX</span></p>
-                    <button class="btn" onclick="switchView('swap')">Request Swap</button>
-                </div>
+
+            <div class="card-grid skeleton-grid" id="peopleLoading" style="display:grid;">
+                <div class="card skeleton-card"></div>
+                <div class="card skeleton-card"></div>
             </div>
+            <div class="card-grid" id="skillsGrid"></div>
+            <div class="empty-state" id="emptyState" style="display:none;">
+                No one matches that search yet — try a different skill or name.
+            </div>
+            <p class="api-note" id="peopleApiNote">Loading partners...</p>
         </section>
 
-        <!-- Profile View -->
+      \
         <section id="view-profile" class="view">
+            <div class="eyebrow">Your Profile</div>
             <h1>My Profile</h1>
             <div class="profile-section">
-                <h3>Anodumo</h3>
-                <p style="color: var(--text-light); margin-bottom: 1rem;">Software Development & Cybersecurity Student</p>
-                
-                <h4 style="margin-top: 1rem;">Skills Offered</h4>
-                <div>
-                    <span class="tag">C#</span>
-                    <span class="tag">SQL</span>
+                <div class="profile-header">
+                    <div class="avatar" id="profileAvatar">A</div>
+                    <div>
+                        <h3 id="profileName">Anodumo</h3>
+                        <p style="color: var(--text-light);" id="profileTitle">Software Development &amp; Cybersecurity Student</p>
+                    </div>
                 </div>
 
-                <h4 style="margin-top: 1rem;">Skills Wanted</h4>
-                <div>
-                    <span class="tag">Cloud Architecture</span>
-                    <span class="tag">Penetration Testing</span>
+                <h4>Skills Offered</h4>
+                <div class="tag-list" id="offeredTags"></div>
+                <div class="add-skill-row">
+                    <input type="text" class="add-skill-input" id="addOfferedInput" placeholder="Add a skill you offer..."
+                        onkeydown="if(event.key==='Enter') addSkill('offered','addOfferedInput')">
+                    <button class="btn btn-small" onclick="addSkill('offered','addOfferedInput')">Add</button>
                 </div>
+
+                <h4>Skills Wanted</h4>
+                <div class="tag-list" id="wantedTags"></div>
+                <div class="add-skill-row">
+                    <input type="text" class="add-skill-input" id="addWantedInput" placeholder="Add a skill you want to learn..."
+                        onkeydown="if(event.key==='Enter') addSkill('wanted','addWantedInput')">
+                    <button class="btn btn-small" onclick="addSkill('wanted','addWantedInput')">Add</button>
+                </div>
+
+                <h4>Connect GitHub</h4>
+                <div class="add-skill-row">
+                    <input type="text" class="add-skill-input" id="githubUsernameInput" placeholder="GitHub username...">
+                    <button class="btn btn-small" onclick="fetchGithubProfile()">Connect</button>
+                </div>
+                <p class="github-status" id="githubStatus"></p>
+                <div class="github-profile" id="githubProfile" style="display:none;"></div>
             </div>
         </section>
 
-        <!-- Chat / Swap View -->
+       
         <section id="view-swap" class="view">
+            <div class="eyebrow">Active Exchange</div>
             <h1>Active Swap Sessions</h1>
-            <div class="card">
-                <h3>Swap with Alex Smith</h3>
-                <p><strong>Status:</strong> Proposed Match</p>
-                <p style="margin: 0.5rem 0; color: var(--text-light);">Exchanging: JavaScript ⇄ Graphic Design</p>
-                <button class="btn" style="background-color: #16a34a;" onclick="alert('Swap Accepted!')">Accept Swap</button>
-            </div>
+            <div id="swapContainer"></div>
         </section>
     </main>
+
+    <div class="toast" id="toast"></div>
 
     <script src="/project/scripts/scripts.js"></script>
 </body>
